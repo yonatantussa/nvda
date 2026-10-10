@@ -112,10 +112,12 @@ bool isScreenFullyBlack() {
 		// In this case, replace destination with source.
 		SRCCOPY
 	);
+	// Preserve the BitBlt error before restoring the selected object can change it.
+	const DWORD bitBltError = bStatus ? ERROR_SUCCESS : GetLastError();
 	// Restore captureDC for safety.
 	SelectObject(captureDc.get(), oldObj);
 	if (!bStatus) {
-		LOG_ERROR("Failed to bit blit desktop device context to capture device context. Error #" << GetLastError());
+		LOG_ERROR("Failed to bit blit desktop device context to capture device context. Error #" << bitBltError);
 		return false;
 	}
 

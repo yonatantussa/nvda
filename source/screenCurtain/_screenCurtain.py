@@ -4,6 +4,7 @@
 # For full terms and any additional permissions, see the NVDA license file: https://github.com/nvaccess/nvda/blob/master/copying.txt
 
 import os
+import time
 from typing import Final, TypedDict, cast
 
 import config
@@ -159,6 +160,9 @@ class ScreenCurtain:
 	_MAX_ENABLE_RETRIES: Final[int] = 3
 	"""Maximum number of times to try enabling Screen Curtain."""
 
+	_INITIAL_ENABLE_RETRY_DELAY: Final[float] = 0.01
+	"""Initial delay in seconds between enable attempts, doubled for each subsequent retry."""
+
 	def __init__(self):
 		"""Initializer."""
 		super().__init__()
@@ -209,6 +213,10 @@ class ScreenCurtain:
 
 		log.debug("Enabling ScreenCurtain")
 		for attempt in range(self._MAX_ENABLE_RETRIES):
+			if attempt > 0:
+				# Allow transient display state changes (e.g. during post-sign-in OOBE) to settle.
+				# Keep the total delay short because enabling runs synchronously.
+				time.sleep(self._INITIAL_ENABLE_RETRY_DELAY * 2 ** (attempt - 1))
 			exception: Exception | None = None
 			try:
 				magnification.MagInitialize()
